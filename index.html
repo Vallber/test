@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Коментарі</title>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(10px); }
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #eef2f7;
+        }
+        .container {
+            width: 80%;
+            margin: 20px 0;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .sort-menu {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        .sort-menu label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .sort-menu select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+        .sort-menu select:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        .comment-form, .reply-form {
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .comment-form input, .comment-form textarea, .reply-form input, .reply-form textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+            font-family: inherit;
+        }
+        .file-input-container, .captcha-container {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .file-input-label, .captcha-label {
+            margin: 0;
+            font-size: 14px;
+        }
+        .file-input-label {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-family: inherit;
+        }
+        .file-input-label:hover {
+            background-color: #45a049;
+        }
+        .file-input {
+            display: none;
+        }
+        .captcha-container input[type="checkbox"] {
+            margin-right: 5px;
+            width: 18px;
+            height: 18px;
+        }
+        .captcha-container label {
+            font-size: 14px;
+            margin: 0;
+        }
+        .comment-form button, .reply-button, .reply-form button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-family: inherit;
+        }
+        .comment-form button:hover, .reply-button:hover, .reply-form button:hover {
+            background-color: #45a049;
+        }
+        .comment {
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .comment img {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+            border-radius: 50%;
+            vertical-align: middle;
+            display: inline-block;
+        }
+        .comment .name {
+            font-weight: bold;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .comment .date {
+            display: inline-block;
+            margin-left: 15px;
+            font-size: 12px;
+            color: #888;
+        }
+        .comment .email {
+            font-size: 12px;
+            color: #555;
+            margin-top: 2px;
+        }
+        .reply {
+            margin-left: 20px;
+        }
+        .reply .date {
+            top: 15px;
+            display: inline-block;
+            margin-left: 15px;
+            font-size: 12px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="comment-form">
+            <h2>Написати коментар</h2>
+            <form id="commentForm">
+                <input type="text" id="userName" placeholder="User Name" pattern="[A-Za-z0-9]+" title="Цифры и буквы латинского алфавита" required><br>
+                <input type="email" id="userEmail" placeholder="E-mail" required><br>
+                <input type="url" id="userHomepage" placeholder="Home page"><br>
+                <div class="file-input-container">
+                    <label for="userIcon" class="file-input-label">Вибрати файл</label>
+                    <input type="file" id="userIcon" class="file-input" accept="image/*">
+                </div>
+                <div class="captcha-container">
+                    <input type="checkbox" id="captcha" required>
+                    <label for="captcha" class="captcha-label">Я не робот</label>
+                </div>
+                <textarea id="userComment" placeholder="Text" required></textarea><br>
+                <button type="submit">Додати</button>
+            </form>
+        </div>
+        <div class="sort-menu">
+            <label for="sortSelect">Сортувати за: </label>
+            <select id="sortSelect" onchange="sortComments()">
+                <option value="name">Ім'я</option>
+                <option value="email">Електронна пошта</option>
+                <option value="date">Дата</option>
+            </select>
+        </div>
+        <div id="commentsBody"></div>
+        <div id="pagination"></div>
+    </div>
+
+    <script>
+        const comments = [
+            {
+                icon: 'images/ico1.png',
+                name: 'Андрій',
+                email: 'andriy@example.com',
+                homepage: '',
+                comment: 'Це тестовий коментар від Андрія.',
+                date: '2025-01-24 12:34:56',
+                replies: []
+            },
+            {
+                icon: 'images/ico2.png',
+                name: 'Олена',
+                email: 'olena@example.com',
+                homepage: '',
+                comment: 'Це тестовий коментар від Олени.',
+                date: '2025-01-24 12:35:56',
+                replies: []
+            },
+            {
+                icon: 'images/ico3.png',
+                name: 'Сергій',
+                email: 'sergiy@example.com',
+                homepage: '',
+                comment: 'Це тестовий коментар від Сергія.',
+                date: '2025-01-24 12:36:56',
+                replies: []
+            }
+        ];
+        const commentsPerPage = 25;
+        let currentPage = 1;
+        let sortOrder = true;
+
+        window.onload = function() {
+            renderComments();
+        };
+
+        function renderComments() {
+            const commentsBody = document.getElementById('commentsBody');
+            commentsBody.innerHTML = '';
+
+            const startIndex = (currentPage - 1) * commentsPerPage;
+            const endIndex = Math.min(startIndex + commentsPerPage, comments.length);
+
+            for (let i = startIndex; i < endIndex; i++) {
+                const comment = comments[i];
+                const iconHTML = comment.icon ? `<img src="${comment.icon}" alt="icon" class="icon">` : '';
+                const homepageHTML = comment.homepage ? `<a href="${comment.homepage}" target="_blank">Сторінка</a>` : '';
+                const commentDiv = document.createElement('div');
+                commentDiv.classList.add('comment');
+                commentDiv.setAttribute('data-comment-id', comment.id);
+                commentDiv.innerHTML = `
+                    <div>
+                        ${iconHTML}
+                        <span class="name">${comment.name}</span>
+                    </div>
+                    <div>
+                        <span class="date">${comment.date}</span><br>
+                        <span class="email">${comment.email}</span><br>
+                        ${homepageHTML}
+                    </div>
+                    <p>${comment.comment}</p>
+                    <button class="reply-button" onclick="showReplyForm(${i})">Відповісти</button>
+                    <div class="replies" id="replies-${i}"></div>
+                    <div class="reply-form" id="replyForm-${i}" style="display:none;">
+                        <form onsubmit="submitReply(event, ${i})">
+                            <input type="text" id="replyUserName-${i}" placeholder="User Name" pattern="[A-Za-z0-9]+" title="Цифры и буквы латинского алфавита" required><br>
+                            <input type="email" id="replyUserEmail-${i}" placeholder="E-mail" required><br>
+                            <input type="url" id="replyUserHomepage-${i}" placeholder="Home page"><br>
+                            <div class="file-input-container">
+                                <label for="replyUserIcon-${i}" class="file-input-label">Вибрати файл</label>
+                                <input type="file" id="replyUserIcon-${i}" class="file-input" accept="image/*">
+                            </div>
+                            <div class="captcha-container">
+                                <input type="checkbox" id="replyCaptcha-${i}" required>
+                                <label for="replyCaptcha-${i}" class="captcha-label">Я не робот</label>
+                            </div>
+                            <textarea id="replyText-${i}" placeholder="Text" required></textarea><br>
+                            <button type="submit">Додати</button>
+                        </form>
+                    </div>
+                `;
+
+                commentsBody.appendChild(commentDiv);
+                renderReplies(comment.replies, i);
+            }
+
+            renderPagination();
+        }
+
+        function renderReplies(replies, parentIndex) {
+            const repliesDiv = document.getElementById(`replies-${parentIndex}`);
+            repliesDiv.innerHTML = '';
+
+            for (const reply of replies) {
+                const replyDiv = document.createElement('div');
+                replyDiv.classList.add('reply');
+                replyDiv.innerHTML = `
+                    <div>
+                        ${reply.icon ? `<img src="${reply.icon}" alt="icon" class="icon">` : ''}
+                        <span class="name">${reply.name}</span>
+                    </div>
+                    <div>
+                        <span class="date">${reply.date}</span><br>
+                        <span class="email">${reply.email}</span><br>
+                        ${reply.homepage ? `<a href="${reply.homepage}" target="_blank">Сторінка</a>` : ''}
+                    </div>
+                    <p>${reply.comment}</p>
+                `;
+                repliesDiv.appendChild(replyDiv);
+            }
+        }
+
+        document.getElementById('commentForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const userName = document.getElementById('userName').value;
+            const userEmail = document.getElementById('userEmail').value;
+            const userHomepage = document.getElementById('userHomepage').value;
+            const userComment = document.getElementById('userComment').value;
+
+            const commentData = {
+                user_name: userName,
+                email: userEmail,
+                home_page: userHomepage,
+                text: userComment
+            };
+
+            fetch('/add_comment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(commentData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    renderComments();
+                } else {
+                    alert('Сталася помилка: ' + data.message);
+                }
+            });
+
+            comments.push({
+                icon: '',
+                name: userName,
+                email: userEmail,
+                homepage: userHomepage,
+                comment: userComment,
+                date: new Date().toISOString(),
+                replies: []
+            });
+
+            this.reset();
+            renderComments();
+        });
+
+        function submitReply(event, index) {
+            event.preventDefault();
+            const replyUserName = document.getElementById(`replyUserName-${index}`).value;
+            const replyUserEmail = document.getElementById(`replyUserEmail-${index}`).value;
+            const replyUserHomepage = document.getElementById(`replyUserHomepage-${index}`).value;
+            const replyText = document.getElementById(`replyText-${index}`).value;
+
+            const reply = {
+                icon: '',
+                name: replyUserName,
+                email: replyUserEmail,
+                homepage: replyUserHomepage,
+                comment: replyText,
+                date: new Date().toISOString()
+            };
+
+            comments[index].replies.push(reply);
+
+            renderComments();
+
+            const replyForm = document.getElementById(`replyForm-${index}`);
+            replyForm.style.display = 'none';
+            replyForm.reset();
+        }
+
+        function sortComments() {
+            const sortKey = document.getElementById('sortSelect').value;
+            comments.sort((a, b) => {
+                let valA = a[sortKey];
+                let valB = b[sortKey];
+                if (sortKey === 'date') {
+                    valA = new Date(a[sortKey]);
+                    valB = new Date(b[sortKey]);
+                } else {
+                    valA = a[sortKey].toLowerCase();
+                    valB = b[sortKey].toLowerCase();
+                }
+                if (valA < valB) return sortOrder ? -1 : 1;
+                if (valA > valB) return sortOrder ? 1 : -1;
+                return 0;
+            });
+
+            sortOrder = !sortOrder;
+            renderComments();
+        }
+
+        function showReplyForm(index) {
+            const replyForm = document.getElementById(`replyForm-${index}`);
+            if (replyForm.style.display === 'block') {
+                replyForm.style.animation = 'fadeOut 0.5s ease-in-out';
+                setTimeout(() => {
+                    replyForm.style.display = 'none';
+                }, 500);
+            } else {
+                replyForm.style.display = 'block';
+                replyForm.style.animation = 'fadeIn 0.5s ease-in-out';
+            }
+        }
+
+        function renderPagination() {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            const totalPages = Math.ceil(comments.length / commentsPerPage);
+
+            for (let i = 1; i <= totalPages; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.textContent = i;
+                pageButton.onclick = function() {
+                    currentPage = i;
+                    renderComments();
+                };
+
+                if (i === currentPage) {
+                    pageButton.disabled = true;
+                }
+
+                pageButton.style.animation = 'fadeIn 0.5s ease-in-out';
+                pagination.appendChild(pageButton);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  app:
+    build: .
+    depends_on:
+      - db
+    environment:
+      MYSQL_HOST: db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: 1111
+      MYSQL_DATABASE: data
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    command: ["/bin/sh", "-c", "/wait-for-db.sh db python server.py"]
+
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: 1111
+      MYSQL_DATABASE: data
+    ports:
+      - "3306:3306"
